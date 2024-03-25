@@ -3,6 +3,7 @@ import csv
 import os
 import requests
 import math
+from sec_edgar_api import EdgarClient
 
 
 def find_cik(ticker):
@@ -11,20 +12,17 @@ def find_cik(ticker):
 
     for entry in parsed_json:
         if parsed_json[entry]["ticker"] == ticker:
-            cik = str(parsed_json[entry]["cik_str"])
-            while len(cik) < 10:
-                cik = "0" + cik
+            cik = parsed_json[entry]["cik_str"]
             return cik
 
 
 # Data Sources: sec edgar, yahoo finance
-co_cik = find_cik("AAPL")
-url = "https://data.sec.gov/submissions/CIK" + co_cik + ".json"
+co_cik = find_cik("ELF")
 
-r = requests.get(
-    url=url,
-    headers={
-        "User-Agent": "Mozilla/5.0 (Simon Burghardt Holding sb@simonburghardt.de)"
-    },
-).json()
-print(r)
+
+edgar = EdgarClient(user_agent="Simon Burghardt Holding; sb@simonburghardt.de")
+facts = edgar.get_company_facts(cik=co_cik)
+
+
+with open("data.json", "w", encoding="utf-8") as f:
+    json.dump(facts, f, ensure_ascii=False, indent=4)
